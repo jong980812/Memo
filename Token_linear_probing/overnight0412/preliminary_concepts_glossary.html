@@ -1,0 +1,418 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.wrap { padding: 1.2rem 0; font-family: var(--font-sans); }
+.nav { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 1.4rem; }
+.nb { padding: 5px 13px; border: 0.5px solid var(--color-border-secondary); border-radius: 20px; font-size: 11px; cursor: pointer; background: var(--color-background-primary); color: var(--color-text-secondary); white-space: nowrap; transition: all 0.15s; }
+.nb.active { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); font-weight: 500; }
+.page { display: none; } .page.active { display: block; }
+.ptitle { font-size: 15px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 2px; }
+.psub { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 14px; }
+.card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; margin-bottom: 10px; }
+.sec { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); letter-spacing: 0.4px; text-transform: uppercase; margin: 14px 0 6px; }
+.body { font-size: 13px; color: var(--color-text-secondary); line-height: 1.75; }
+.body strong { color: var(--color-text-primary); font-weight: 500; }
+.formula { font-family: var(--font-mono); font-size: 12px; background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 10px 14px; margin: 8px 0; color: var(--color-text-primary); line-height: 1.8; }
+.green { color: #1D9E75; font-weight: 500; }
+.red2 { color: #A32D2D; font-weight: 500; }
+.blue { color: #185FA5; font-weight: 500; }
+.pur { color: #534AB7; font-weight: 500; }
+.amber { color: #BA7517; font-weight: 500; }
+.tag { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 11px; font-weight: 500; margin-right: 4px; }
+.tg { background: #E1F5EE; color: #04342C; }
+.tr { background: #FAECE7; color: #712B13; }
+.tb { background: #E6F1FB; color: #042C53; }
+.tp { background: #EEEDFE; color: #26215C; }
+.ta { background: #FAEEDA; color: #412402; }
+
+.eg { background: var(--color-background-secondary); border-left: 3px solid var(--color-border-secondary); border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0; padding: 9px 13px; font-size: 12px; color: var(--color-text-secondary); line-height: 1.7; margin-top: 8px; }
+.eg strong { color: var(--color-text-primary); font-weight: 500; }
+.eg-good { border-left-color: #1D9E75; background: #E1F5EE; color: #085041; }
+.eg-bad  { border-left-color: #A32D2D; background: #FAECE7; color: #712B13; }
+
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.g3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.mc { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 10px 12px; }
+.ml { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 4px; }
+.mv { font-size: 18px; font-weight: 500; }
+.ms { font-size: 11px; color: var(--color-text-tertiary); margin-top: 2px; }
+
+.tw { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th { padding: 6px 9px; text-align: left; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-secondary); font-weight: 500; }
+td { padding: 6px 9px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+
+.vis-container { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 14px; margin-top: 10px; }
+.dot-row { display: flex; gap: 6px; align-items: flex-end; margin-bottom: 6px; }
+.dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 500; flex-shrink: 0; }
+.bar-anim { height: 16px; border-radius: 3px; margin-bottom: 4px; transition: width 0.4s ease; }
+</style>
+
+<div class="wrap">
+<div class="nav">
+  <button class="nb active" onclick="go('r2')">R² (결정계수)</button>
+  <button class="nb" onclick="go('fstat')">F-통계량 (ANOVA)</button>
+  <button class="nb" onclick="go('corr')">Pearson 상관계수</button>
+  <button class="nb" onclick="go('probe')">Linear Probe</button>
+  <button class="nb" onclick="go('pca')">PCA</button>
+  <button class="nb" onclick="go('cv')">Cross-validation</button>
+  <button class="nb" onclick="go('topdim')">Top-dim 선정</button>
+  <button class="nb" onclick="go('delta')">Delta vector</button>
+</div>
+
+<!-- ===== R² ===== -->
+<div id="pg-r2" class="page active">
+  <div class="ptitle">R² — 결정계수 (coefficient of determination)</div>
+  <div class="psub">회귀 모델이 정답(실제값)을 얼마나 잘 설명하는가</div>
+
+  <div class="card">
+    <div class="sec">한 줄 정의</div>
+    <div class="body"><strong>예측값이 실제값의 분산을 얼마나 설명하는지</strong>의 비율. 0~1 사이 값.</div>
+
+    <div class="sec">수식</div>
+    <div class="formula">R² = 1 − SS_res / SS_tot
+
+SS_res = Σ(y_i − ŷ_i)²   ← 예측 오차의 합
+SS_tot = Σ(y_i − ȳ)²    ← 실제값의 전체 분산</div>
+
+    <div class="sec">직관적 해석</div>
+    <div class="g3" style="margin-top:4px">
+      <div class="mc"><div class="ml">R² = 1.0</div><div class="mv green">완벽</div><div class="ms">예측 = 실제</div></div>
+      <div class="mc"><div class="ml">R² = 0.5</div><div class="mv amber">절반 설명</div><div class="ms">분산의 50%만</div></div>
+      <div class="mc"><div class="ml">R² = 0.0</div><div class="mv red2">무의미</div><div class="ms">평균과 다를 바 없음</div></div>
+    </div>
+
+    <div class="sec">이 실험에서 쓰인 방식</div>
+    <div class="eg">
+      <strong>위치 예측 (Position R²)</strong>: 프레임별 mean-pooled 벡터(D-dim)로 물체의 x좌표(또는 y좌표)를 Ridge Regression으로 예측 → R² 계산.<br>
+      R²(x) = 0.727 → "D-dim 벡터가 물체의 x좌표 분산 중 72.7%를 설명한다" = 위치 정보가 dim 안에 담겨있다.
+    </div>
+    <div class="eg eg-good">R² &gt; 0.9 → 정보가 매우 강하게 인코딩됨</div>
+    <div class="eg eg-bad">R² ≈ 0 → 해당 정보가 벡터 안에 없음 (또는 선형으로 접근 불가)</div>
+  </div>
+</div>
+
+<!-- ===== F-stat ===== -->
+<div id="pg-fstat" class="page">
+  <div class="ptitle">F-통계량 (One-way ANOVA F-statistic)</div>
+  <div class="psub">여러 그룹 간에 평균 차이가 유의미하게 존재하는가</div>
+
+  <div class="card">
+    <div class="sec">한 줄 정의</div>
+    <div class="body"><strong>그룹 간 분산 / 그룹 내 분산</strong>의 비율. 높을수록 그룹이 잘 분리됨.</div>
+
+    <div class="sec">수식</div>
+    <div class="formula">F = MS_between / MS_within
+
+MS_between = SS_between / (k−1)   ← 그룹 간 분산 (k = 그룹 수)
+MS_within  = SS_within  / (N−k)   ← 그룹 내 분산 (N = 전체 샘플 수)
+
+SS_between = Σ n_j(ȳ_j − ȳ)²    ← 그룹 평균 vs 전체 평균
+SS_within  = ΣΣ(y_ij − ȳ_j)²    ← 각 샘플 vs 해당 그룹 평균</div>
+
+    <div class="sec">직관적 그림</div>
+    <div class="vis-container">
+      <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:8px">dim d 값의 분포 — 4방향 그룹별</div>
+      <div style="margin-bottom:10px">
+        <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:4px">F가 낮을 때 (그룹이 섞임) — direction 정보 없음</div>
+        <div style="display:flex;gap:3px;align-items:flex-end;height:40px">
+          <div style="flex:1;background:#D3D1C7;border-radius:3px 3px 0 0;height:60%"></div>
+          <div style="flex:1;background:#B5D4F4;border-radius:3px 3px 0 0;height:70%"></div>
+          <div style="flex:1;background:#9FE1CB;border-radius:3px 3px 0 0;height:55%"></div>
+          <div style="flex:1;background:#CECBF6;border-radius:3px 3px 0 0;height:65%"></div>
+          <div style="flex:1;background:#D3D1C7;border-radius:3px 3px 0 0;height:80%"></div>
+          <div style="flex:1;background:#B5D4F4;border-radius:3px 3px 0 0;height:60%"></div>
+          <div style="flex:1;background:#9FE1CB;border-radius:3px 3px 0 0;height:72%"></div>
+          <div style="flex:1;background:#CECBF6;border-radius:3px 3px 0 0;height:58%"></div>
+          <div style="flex:1;background:#D3D1C7;border-radius:3px 3px 0 0;height:65%"></div>
+          <div style="flex:1;background:#B5D4F4;border-radius:3px 3px 0 0;height:75%"></div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:4px">F가 높을 때 (그룹이 분리됨) — direction 정보 있음</div>
+        <div style="display:flex;gap:3px;align-items:flex-end;height:40px">
+          <div style="flex:1;background:#D3D1C7;border-radius:3px 3px 0 0;height:90%"></div>
+          <div style="flex:1;background:#D3D1C7;border-radius:3px 3px 0 0;height:95%"></div>
+          <div style="flex:1;background:#B5D4F4;border-radius:3px 3px 0 0;height:40%"></div>
+          <div style="flex:1;background:#B5D4F4;border-radius:3px 3px 0 0;height:45%"></div>
+          <div style="flex:1;background:#9FE1CB;border-radius:3px 3px 0 0;height:10%"></div>
+          <div style="flex:1;background:#9FE1CB;border-radius:3px 3px 0 0;height:15%"></div>
+          <div style="flex:1;background:#CECBF6;border-radius:3px 3px 0 0;height:60%"></div>
+          <div style="flex:1;background:#CECBF6;border-radius:3px 3px 0 0;height:65%"></div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:5px;font-size:10px;">
+          <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;background:#D3D1C7;border-radius:2px;display:inline-block"></span>up</span>
+          <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;background:#B5D4F4;border-radius:2px;display:inline-block"></span>down</span>
+          <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;background:#9FE1CB;border-radius:2px;display:inline-block"></span>left</span>
+          <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;background:#CECBF6;border-radius:2px;display:inline-block"></span>right</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">이 실험에서 쓰인 방식</div>
+    <div class="eg">
+      <strong>per-dim F-stat for direction</strong>: delta 벡터의 각 dim d에 대해 4방향 그룹(up/down/left/right) 간 one-way ANOVA 계산.<br><br>
+      F가 높은 dim d → "이 dim의 값이 방향에 따라 뚜렷하게 달라진다" → direction 정보를 담은 dim.<br><br>
+      상위 50개(top-50) 선정 → 모델 간 겹침 분석.
+    </div>
+    <div class="eg">
+      <strong>F_dir top-50 평균 595 → 843</strong>: 학습 후 direction을 담는 상위 50개 dim의 신호가 40% 강해짐.
+    </div>
+  </div>
+</div>
+
+<!-- ===== Pearson ===== -->
+<div id="pg-corr" class="page">
+  <div class="ptitle">Pearson 상관계수</div>
+  <div class="psub">두 변수가 선형적으로 얼마나 함께 움직이는가</div>
+
+  <div class="card">
+    <div class="sec">한 줄 정의</div>
+    <div class="body">두 변수 X, Y가 <strong>같은 방향으로 얼마나 함께 변하는지</strong>. −1 ~ +1 사이.</div>
+
+    <div class="sec">수식</div>
+    <div class="formula">r = Σ(x_i − x̄)(y_i − ȳ) / √[Σ(x_i−x̄)² · Σ(y_i−ȳ)²]
+
+r =  1.0 → 완전 양의 상관
+r =  0.0 → 상관 없음
+r = −1.0 → 완전 음의 상관</div>
+
+    <div class="sec">이 실험에서 쓰인 방식</div>
+    <div class="eg">
+      <strong>Position top-dim 선정 (Exp 1.2)</strong>: 각 dim d에 대해 corr(X[:,d], pos_x)와 corr(X[:,d], pos_y)를 각각 계산 후 L2 결합.<br><br>
+      <span style="font-family:var(--font-mono);font-size:11px">corr_pos[d] = √(corr_x[d]² + corr_y[d]²)</span><br><br>
+      이 값이 높은 dim = x좌표와 y좌표 모두와 강한 선형 관계 = 위치 정보를 담은 dim.
+    </div>
+    <div class="eg eg-good">장점: 학습 없이 순수하게 선형 관계만 측정. 빠르고 해석 직관적.</div>
+    <div class="eg eg-bad">한계: 비선형 관계는 못 잡음. 여러 dim이 함께 기여하는 경우 개별 dim 평가는 제한적.</div>
+  </div>
+</div>
+
+<!-- ===== Linear Probe ===== -->
+<div id="pg-probe" class="page">
+  <div class="ptitle">Linear Probe (선형 탐침)</div>
+  <div class="psub">모델 내부 표현에 특정 정보가 선형적으로 접근 가능한가를 테스트</div>
+
+  <div class="card">
+    <div class="sec">한 줄 정의</div>
+    <div class="body">모델의 hidden representation(벡터) 위에 <strong>간단한 선형 모델만 얹어서</strong> 특정 정보(레이블)를 얼마나 예측할 수 있는지 측정.</div>
+
+    <div class="sec">왜 선형으로 제한하나?</div>
+    <div class="body">비선형 probe(MLP 등)는 너무 강해서 정보가 없어도 예측할 수 있음. <strong>선형으로 제한하면 "이 정보가 선형적으로 접근 가능한 형태로 표현에 들어있는가"만 테스트</strong>. 표현(representation) 자체의 정보량을 깨끗하게 측정.</div>
+
+    <div class="sec">이 실험에서 사용한 두 가지 probe</div>
+    <div class="g2" style="margin-top:4px">
+      <div class="mc">
+        <div class="ml">Ridge Regression (회귀)</div>
+        <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.7;margin-top:4px">
+          연속값 예측 (위치 x, y)<br>
+          w = (X'X + αI)⁻¹X'y<br>
+          α=1.0, 닫힌 형태 풀이<br>
+          → R² 보고
+        </div>
+      </div>
+      <div class="mc">
+        <div class="ml">Logistic Regression (분류)</div>
+        <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.7;margin-top:4px">
+          클래스 예측 (방향 4개, 물체 20개)<br>
+          nn.Linear + Adam<br>
+          lr=0.01, 300 epochs, full-batch<br>
+          → Accuracy 보고
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">핵심 해석 주의</div>
+    <div class="eg eg-bad"><strong>Linear probe 높음 ≠ LLM이 그 정보를 잘 쓴다.</strong><br>연구자가 직접 최적 선형 조합을 찾아주는 것. LLM은 attention 메커니즘으로 접근해야 하므로 probe보다 훨씬 어려운 과제.</div>
+    <div class="eg eg-good">즉 probe accuracy가 높아도 LLM QA 성능이 낮을 수 있다 — "정보는 있는데 못 꺼내는" 상황. 이게 이 논문의 핵심 병목 주장.</div>
+  </div>
+</div>
+
+<!-- ===== PCA ===== -->
+<div id="pg-pca" class="page">
+  <div class="ptitle">PCA (주성분 분석)</div>
+  <div class="psub">고차원 데이터에서 분산이 가장 큰 방향(축)을 순서대로 추출</div>
+
+  <div class="card">
+    <div class="sec">한 줄 정의</div>
+    <div class="body">D-dim 데이터를 <strong>분산이 큰 방향 순</strong>으로 정렬한 새 좌표계(주성분, PC)로 변환. 첫 k개 PC가 전체 분산의 대부분을 설명.</div>
+
+    <div class="sec">주성분(PC)이란?</div>
+    <div class="body">원본 D-dim 벡터의 선형 조합. PC1은 분산이 가장 큰 방향, PC2는 PC1과 직교하면서 다음으로 분산이 큰 방향, … 이런 식으로 D개 PC가 만들어짐.</div>
+
+    <div class="sec">이 실험에서 쓰인 방식 (Exp 1.1)</div>
+    <div class="eg">
+      pre_mean (64000, 1152) → 10000개 subsample → PCA 1000개<br><br>
+      질문: "PC 상위 k개만으로 위치(x, y)를 예측할 수 있는가?"<br><br>
+      결과: PC 50개 (분산 82% 설명) → R²(x) = 0.06 → <strong>위치 정보는 상위 PC에 없다!</strong><br>
+      → 위치 정보가 전체 dim에 분산되어 있다는 증거
+    </div>
+
+    <div class="sec">분산 설명량 vs 정보량의 차이</div>
+    <div class="eg eg-bad">
+      <strong>흔한 오해</strong>: "PC 50개가 분산 82%를 설명하면 그 안에 대부분의 정보가 있다"<br><br>
+      <strong>실제</strong>: 분산이 크다 ≠ 위치 정보가 있다. 분산이 큰 방향은 보통 semantic(물체 종류) 정보. 위치 정보는 작은 분산의 여러 dim에 분산되어 있을 수 있음.
+    </div>
+  </div>
+</div>
+
+<!-- ===== CV ===== -->
+<div id="pg-cv" class="page">
+  <div class="ptitle">K-fold Cross-validation</div>
+  <div class="psub">모델의 일반화 성능을 overfitting 없이 신뢰성 있게 측정</div>
+
+  <div class="card">
+    <div class="sec">한 줄 정의</div>
+    <div class="body">데이터를 k개 fold로 나눠 <strong>k번 반복해서 각기 다른 fold를 test set으로</strong> 사용. 결과를 평균 내면 train/test split의 운에 덜 좌우되는 안정적 평가.</div>
+
+    <div class="sec">5-fold 예시</div>
+    <div class="vis-container">
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <div style="display:flex;gap:4px;align-items:center">
+          <div style="font-size:11px;color:var(--color-text-secondary);min-width:50px">Round 1</div>
+          <div style="flex:1;height:18px;background:#FAECE7;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#712B13;font-weight:500">TEST</div>
+          <div style="flex:1;height:18px;background:#E1F5EE;border-radius:3px"></div>
+          <div style="flex:1;height:18px;background:#E1F5EE;border-radius:3px"></div>
+          <div style="flex:1;height:18px;background:#E1F5EE;border-radius:3px"></div>
+          <div style="flex:1;height:18px;background:#E1F5EE;border-radius:3px"></div>
+        </div>
+        <div style="display:flex;gap:4px;align-items:center">
+          <div style="font-size:11px;color:var(--color-text-secondary);min-width:50px">Round 2</div>
+          <div style="flex:1;height:18px;background:#E1F5EE;border-radius:3px"></div>
+          <div style="flex:1;height:18px;background:#FAECE7;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#712B13;font-weight:500">TEST</div>
+          <div style="flex:1;height:18px;background:#E1F5EE;border-radius:3px"></div>
+          <div style="flex:1;height:18px;background:#E1F5EE;border-radius:3px"></div>
+          <div style="flex:1;height:18px;background:#E1F5EE;border-radius:3px"></div>
+        </div>
+        <div style="display:flex;gap:4px;align-items:center">
+          <div style="font-size:11px;color:var(--color-text-secondary);min-width:50px">Round 3</div>
+          <div style="flex:1;height:18px;background:#E1F5EE;border-radius:3px"></div>
+          <div style="flex:1;height:18px;background:#E1F5EE;border-radius:3px"></div>
+          <div style="flex:1;height:18px;background:#FAECE7;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#712B13;font-weight:500">TEST</div>
+          <div style="flex:1;height:18px;background:#E1F5EE;border-radius:3px"></div>
+          <div style="flex:1;height:18px;background:#E1F5EE;border-radius:3px"></div>
+        </div>
+        <div style="display:flex;gap:4px;align-items:center">
+          <div style="font-size:11px;color:var(--color-text-secondary);min-width:50px">… 5회</div>
+          <div style="flex:1;height:18px;background:#E1F5EE;border-radius:3px;opacity:0.4"></div>
+          <div style="flex:1;height:18px;background:#E1F5EE;border-radius:3px;opacity:0.4"></div>
+          <div style="flex:1;height:18px;background:#E1F5EE;border-radius:3px;opacity:0.4"></div>
+          <div style="flex:1;height:18px;background:#FAECE7;border-radius:3px;opacity:0.4"></div>
+          <div style="flex:1;height:18px;background:#FAECE7;border-radius:3px;opacity:0.4"></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:4px;font-size:10px">
+          <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;background:#E1F5EE;border-radius:2px;display:inline-block"></span>Train</span>
+          <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;background:#FAECE7;border-radius:2px;display:inline-block"></span>Test</span>
+        </div>
+      </div>
+    </div>
+    <div class="body" style="margin-top:10px">최종 성능 = 5번의 test 결과 <strong>평균</strong>. 이 실험에서 std &lt; 0.01 → 매우 안정적.</div>
+
+    <div class="sec">주의: Scaler는 fold마다 따로 fit</div>
+    <div class="eg eg-bad">StandardScaler를 전체 데이터에 fit하면 data leakage 발생. <strong>반드시 train fold에만 fit, test fold에 transform만</strong> 적용해야 공정한 평가.</div>
+  </div>
+</div>
+
+<!-- ===== Top-dim ===== -->
+<div id="pg-topdim" class="page">
+  <div class="ptitle">Top-dim 선정 방법 비교</div>
+  <div class="psub">이 실험에서 task마다 다른 기준으로 top-50 dim을 선정함</div>
+
+  <div class="card">
+    <div class="tw"><table>
+      <tr><th>Task</th><th>입력</th><th>기준</th><th>계산 방법</th></tr>
+      <tr>
+        <td><span class="tag tg">Position</span></td>
+        <td style="font-size:11px">전체 프레임<br>(N×8, D)</td>
+        <td style="font-size:11px">Pearson 상관계수<br>(x, y 각각)</td>
+        <td style="font-family:var(--font-mono);font-size:10px">corr_pos[d] = √(r_x² + r_y²)<br>상위 k개 선정</td>
+      </tr>
+      <tr>
+        <td><span class="tag tb">Direction</span></td>
+        <td style="font-size:11px">Delta 벡터<br>(N, D)</td>
+        <td style="font-size:11px">ANOVA F-통계량<br>(4방향 그룹)</td>
+        <td style="font-family:var(--font-mono);font-size:10px">f_stats_dir[d] = F(up,dn,lt,rt)<br>상위 k개 선정</td>
+      </tr>
+      <tr>
+        <td><span class="tag tp">Object</span></td>
+        <td style="font-size:11px">Mid 프레임<br>(N, D)</td>
+        <td style="font-size:11px">ANOVA F-통계량<br>(20종 그룹)</td>
+        <td style="font-family:var(--font-mono);font-size:10px">f_stats_obj[d] = F(20 classes)<br>상위 k개 선정</td>
+      </tr>
+    </table></div>
+
+    <div class="sec">왜 task마다 기준이 다른가?</div>
+    <div class="body">Position은 연속값(x, y좌표) → 상관계수가 자연스러운 측정. Direction/Object는 이산 클래스 → 그룹 간 분리도인 F-통계량이 적합. 모두 <strong>학습 없이 개별 dim을 독립적으로 평가</strong>한다는 공통점이 있음.</div>
+
+    <div class="sec">Linear probe weight와의 차이</div>
+    <div class="eg">
+      <strong>이 실험 방식 (per-dim univariate)</strong>: 각 dim을 독립적으로 봄. "이 dim 하나만으로 target을 얼마나 예측하는가."<br><br>
+      <strong>Linear probe weight 방식 (multivariate)</strong>: 모든 dim이 동시에 협력해서 예측. 개별 dim의 기여보다 전체 조합을 최적화.<br><br>
+      → 둘이 꼭 같은 dim을 top으로 고르진 않는다. 이 실험은 univariate 방식.
+    </div>
+
+    <div class="sec">Top-k Overlap 분석</div>
+    <div class="eg">
+      각 task의 top-50 집합을 set으로 만들어 교집합 계산:<br>
+      <span style="font-family:var(--font-mono);font-size:11px">overlap = len(set_A ∩ set_B)</span><br><br>
+      <strong>랜덤 기대값</strong>: 50 × 50 / D = 50 × 50 / 3584 ≈ 0.7개<br>
+      → Position ∩ Direction = 30~37개 (랜덤의 ~50배) → 같은 dim 공유<br>
+      → Position ∩ Object = 0~3개 (랜덤 수준) → 완전히 다른 dim
+    </div>
+  </div>
+</div>
+
+<!-- ===== Delta ===== -->
+<div id="pg-delta" class="page">
+  <div class="ptitle">Delta vector (차분 벡터)</div>
+  <div class="psub">두 시점의 표현 차이로 "변화량(운동)"을 추출</div>
+
+  <div class="card">
+    <div class="sec">한 줄 정의</div>
+    <div class="body">마지막 프레임 표현에서 첫 프레임 표현을 뺀 벡터. <strong>위치의 절대값이 아닌 위치의 변화량</strong> = 운동 방향을 담음.</div>
+
+    <div class="formula">delta = feat[:, -1, :] − feat[:, 0, :]
+
+feat shape: (N, T, D)   → delta shape: (N, D)
+
+즉 N개 비디오 각각에 대해 (마지막프레임 − 첫프레임) 벡터 하나</div>
+
+    <div class="sec">왜 delta를 쓰는가?</div>
+    <div class="g2" style="margin-top:4px">
+      <div class="mc">
+        <div class="ml">단일 프레임만으로는</div>
+        <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.7;margin-top:4px">위치(절대값)는 알 수 있지만, 어디서 어디로 움직였는지(방향)는 프레임 하나로 알 수 없음. Direction acc ≈ 0.37~0.41</div>
+      </div>
+      <div class="mc">
+        <div class="ml">Delta 사용 시</div>
+        <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.7;margin-top:4px">두 프레임의 위치 변화 = 방향 정보 직접 포함. Direction acc = 0.88~0.92</div>
+      </div>
+    </div>
+
+    <div class="sec">직관</div>
+    <div class="eg">
+      GPS 좌표 (37.5°N, 127.0°E) → 위치만 알고 이동 방향 모름.<br>
+      (37.5°N, 127.0°E) → (37.6°N, 127.0°E) 의 차이 = (0.1, 0) → 북쪽으로 이동.<br><br>
+      <strong>Vision token의 mean-pooled 벡터도 마찬가지</strong>: 한 프레임은 위치를, 두 프레임의 차이는 방향을 담는다.
+    </div>
+
+    <div class="sec">T-mean과의 비교</div>
+    <div class="tw"><table>
+      <tr><th>방법</th><th>Direction acc</th><th>이유</th></tr>
+      <tr><td>Delta (last − first)</td><td><span style="color:#1D9E75;font-weight:500">0.912</span></td><td style="font-size:11px">변화량 = 방향 직접 인코딩</td></tr>
+      <tr><td>T축 mean-pool</td><td><span style="color:#A32D2D;font-weight:500">0.358</span></td><td style="font-size:11px">모든 프레임 평균 → 변화 정보 소실</td></tr>
+      <tr><td>8-frame stack</td><td><span style="color:#BA7517;font-weight:500">0.820</span></td><td style="font-size:11px">시퀀스 전체 사용, 데이터 충분할 때</td></tr>
+    </table></div>
+  </div>
+</div>
+
+</div>
+<script>
+function go(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b => b.classList.remove('active'));
+  document.getElementById('pg-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>

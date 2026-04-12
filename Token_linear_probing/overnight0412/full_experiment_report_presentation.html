@@ -1,0 +1,456 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.wrap { padding: 1rem 0; font-family: var(--font-sans); }
+
+/* nav */
+.nav { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 1.4rem; }
+.nb { padding: 5px 12px; border: 0.5px solid var(--color-border-secondary); border-radius: 20px; font-size: 11px; cursor: pointer; background: var(--color-background-primary); color: var(--color-text-secondary); transition: all 0.15s; white-space: nowrap; }
+.nb.active { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); font-weight: 500; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* typography */
+.ph-title { font-size: 16px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 2px; }
+.ph-q { font-size: 12px; color: #534AB7; font-weight: 500; margin-bottom: 12px; }
+.sec-label { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 6px; margin-top: 14px; }
+
+/* cards */
+.card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; margin-bottom: 10px; }
+.insight { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 9px 13px; font-size: 13px; color: var(--color-text-secondary); line-height: 1.7; margin-top: 8px; }
+.insight strong { color: var(--color-text-primary); font-weight: 500; }
+.good { background: #E1F5EE; border-radius: var(--border-radius-md); padding: 9px 13px; font-size: 13px; color: #04342C; line-height: 1.7; margin-top: 8px; }
+.good strong { color: #04342C; }
+.warn { background: #FAECE7; border-radius: var(--border-radius-md); padding: 9px 13px; font-size: 13px; color: #712B13; line-height: 1.7; margin-top: 8px; }
+.warn strong { color: #712B13; }
+.rev-box { background: #FAEEDA; border-radius: var(--border-radius-md); padding: 9px 13px; font-size: 13px; color: #412402; line-height: 1.7; margin-top: 8px; }
+
+/* method box */
+.method { border-left: 3px solid var(--color-border-secondary); background: var(--color-background-secondary); padding: 8px 12px; border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0; margin-bottom: 8px; }
+.method-title { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); margin-bottom: 3px; }
+.method-body { font-size: 13px; color: var(--color-text-primary); line-height: 1.6; }
+.method-body code { font-family: var(--font-mono); font-size: 11px; background: var(--color-background-primary); padding: 1px 4px; border-radius: 3px; }
+
+/* tags */
+.tag { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 500; }
+.m-van  { background: #D3D1C7; color: #2C2C2A; }
+.m-base { background: #B5D4F4; color: #042C53; }
+.m-del  { background: #9FE1CB; color: #04342C; }
+.m-gate { background: #CECBF6; color: #26215C; }
+.t-ans  { background: #E1F5EE; color: #04342C; }
+.t-no   { background: #FAECE7; color: #712B13; }
+
+/* table */
+.tw { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th { text-align: left; padding: 6px 9px; color: var(--color-text-secondary); border-bottom: 0.5px solid var(--color-border-tertiary); font-weight: 500; white-space: nowrap; }
+td { padding: 6px 9px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+.hi { background: #E1F5EE; color: #085041; font-weight: 500; border-radius: 3px; padding: 1px 5px; }
+.lo { background: #FAECE7; color: #712B13; font-weight: 500; border-radius: 3px; padding: 1px 5px; }
+.mi { background: #FAEEDA; color: #412402; font-weight: 500; border-radius: 3px; padding: 1px 5px; }
+
+/* bars */
+.br { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+.bl { font-size: 12px; color: var(--color-text-secondary); min-width: 140px; text-align: right; line-height: 1.3; }
+.bl2 { min-width: 100px; }
+.bt { flex: 1; background: var(--color-background-secondary); border-radius: 4px; height: 22px; overflow: hidden; display: flex; align-items: center; }
+.bf { height: 100%; border-radius: 4px; display: flex; align-items: center; padding: 0 7px; font-size: 11px; font-weight: 500; min-width: 24px; }
+.bv { font-size: 12px; color: var(--color-text-secondary); min-width: 46px; }
+
+/* layer chart */
+.lc { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+.ll { font-size: 11px; color: var(--color-text-secondary); min-width: 70px; text-align: right; }
+.lt { flex: 1; background: var(--color-background-secondary); border-radius: 3px; height: 18px; overflow: hidden; position: relative; }
+.lf { height: 100%; border-radius: 3px; }
+.lv { font-size: 10px; font-weight: 500; color: var(--color-text-secondary); min-width: 34px; }
+.peak { outline: 1.5px solid #E85D24; outline-offset: -1px; border-radius: 3px; }
+
+/* overlap strip */
+.ov { display: flex; height: 24px; border-radius: 4px; overflow: hidden; border: 0.5px solid var(--color-border-tertiary); margin-bottom: 4px; }
+.ov-seg { display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; }
+
+/* grid */
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.g3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.mc { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 10px 12px; }
+.mc-l { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 4px; line-height: 1.4; }
+.mc-v { font-size: 20px; font-weight: 500; }
+.mc-s { font-size: 11px; color: var(--color-text-tertiary); margin-top: 2px; }
+.green { color: #1D9E75; } .amber { color: #BA7517; } .red2 { color: #A32D2D; } .blue { color: #185FA5; } .pur { color: #534AB7; } .gray { color: #5F5E5A; }
+
+.divider { border: none; border-top: 0.5px solid var(--color-border-tertiary); margin: 14px 0; }
+</style>
+
+<div class="wrap">
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nb active" onclick="go('ov')">개요</button>
+  <button class="nb" onclick="go('p1')">Phase 1 — Subspace</button>
+  <button class="nb" onclick="go('p2')">Phase 2 — 복잡도</button>
+  <button class="nb" onclick="go('p3')">Phase 3 — LLM 내부</button>
+  <button class="nb" onclick="go('p4')">Phase 4 — 학습 모델</button>
+  <button class="nb" onclick="go('p5')">Phase 5b — 실제 영상</button>
+</div>
+
+<!-- ========== 개요 ========== -->
+<div id="pg-ov" class="page active">
+  <div class="ph-title">overnight 실험 전체 개요</div>
+  <div class="ph-q">2026-04-12 밤새 자동 실행 — 5개 Phase, ~6시간</div>
+
+  <div class="sec-label">실험 대상 데이터</div>
+  <div class="card">
+    <div class="g2">
+      <div>
+        <div style="font-size:13px;font-weight:500;margin-bottom:6px">R2R_real_color (메인)</div>
+        <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.8">
+          • 8,000 videos<br>
+          • 20 COCO objects × 4 directions × 100개<br>
+          • 8 frames, 384×384, <strong style="color:var(--color-text-primary)">단색 배경</strong>, 직선 운동<br>
+          • Feature: (8000, 8, 1152) pre / (8000, 8, 3584) post
+        </div>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:500;margin-bottom:6px">Testbed (비교용)</div>
+        <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.8">
+          • 200 videos × 4조건<br>
+          • shape_color / shape_place / obj_color / obj_place<br>
+          • 32 frames → 8 uniform sample<br>
+          • Phase 2 complexity 분석에 사용
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-label">모델 구조</div>
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:0;flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px">
+      <div style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:8px;padding:8px 12px;text-align:center;min-width:80px;flex-shrink:0">
+        <div style="font-size:10px;color:var(--color-text-secondary)">입력</div>
+        <div style="font-size:12px;font-weight:500">Video</div>
+        <div style="font-size:10px;color:var(--color-text-tertiary);font-family:var(--font-mono)">(T,384,384)</div>
+      </div>
+      <div style="padding:0 6px;color:var(--color-text-tertiary);flex-shrink:0">→</div>
+      <div style="background:var(--color-background-secondary);border:0.5px solid #7F77DD;border-radius:8px;padding:8px 12px;text-align:center;min-width:100px;flex-shrink:0">
+        <div style="font-size:10px;color:#534AB7">SigLIP ViT</div>
+        <div style="font-size:12px;font-weight:500">Vision Encoder</div>
+        <div style="font-size:10px;color:var(--color-text-tertiary);font-family:var(--font-mono)">(T,729,1152)</div>
+      </div>
+      <div style="padding:0 6px;color:var(--color-text-tertiary);font-size:10px;text-align:center;flex-shrink:0">→<br>N mean-pool</div>
+      <div style="background:var(--color-background-secondary);border:0.5px solid #7F77DD;border-radius:8px;padding:8px 12px;text-align:center;min-width:80px;flex-shrink:0">
+        <div style="font-size:10px;color:#534AB7">pre-proj</div>
+        <div style="font-size:12px;font-weight:500">D=1152</div>
+        <div style="font-size:10px;color:var(--color-text-tertiary);font-family:var(--font-mono)">(T,1152)</div>
+      </div>
+      <div style="padding:0 6px;color:var(--color-text-tertiary);flex-shrink:0">→</div>
+      <div style="background:var(--color-background-secondary);border:0.5px solid #1D9E75;border-radius:8px;padding:8px 12px;text-align:center;min-width:100px;flex-shrink:0">
+        <div style="font-size:10px;color:#0F6E56">MLP Projector</div>
+        <div style="font-size:12px;font-weight:500">mlp2x_gelu</div>
+        <div style="font-size:10px;color:var(--color-text-tertiary);font-family:var(--font-mono)">1152→3584→3584</div>
+      </div>
+      <div style="padding:0 6px;color:var(--color-text-tertiary);flex-shrink:0">→</div>
+      <div style="background:var(--color-background-secondary);border:0.5px solid #1D9E75;border-radius:8px;padding:8px 12px;text-align:center;min-width:80px;flex-shrink:0">
+        <div style="font-size:10px;color:#0F6E56">post-proj</div>
+        <div style="font-size:12px;font-weight:500">D=3584</div>
+        <div style="font-size:10px;color:var(--color-text-tertiary);font-family:var(--font-mono)">(T,3584)</div>
+      </div>
+      <div style="padding:0 6px;color:var(--color-text-tertiary);flex-shrink:0">→</div>
+      <div style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:8px;padding:8px 12px;text-align:center;min-width:80px;flex-shrink:0">
+        <div style="font-size:10px;color:var(--color-text-secondary)">LLM</div>
+        <div style="font-size:12px;font-weight:500">Qwen2-7B</div>
+        <div style="font-size:10px;color:var(--color-text-tertiary)">28 layers</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-label">3가지 핵심 질문과 답</div>
+  <div class="method" style="border-left-color:#A32D2D">
+    <div class="method-title">Q1. 위치 정보가 특정 subspace에 있는가?</div>
+    <div class="method-body"><span class="tag t-no">No</span> — 전체 D=1152에 <strong>분산 인코딩</strong>. PCA 50개(분산 82%)로는 R²(x)=0.06에 불과.</div>
+  </div>
+  <div class="method" style="border-left-color:#1D9E75">
+    <div class="method-title">Q2. 시각적 복잡도가 direction encoding을 약화시키는가?</div>
+    <div class="method-body"><span class="tag t-ans">Yes</span> — 특히 <strong>배경 복잡도</strong>가 주범. 실제 배경 추가 시 direction-strong dim 665개→99개(85% 감소).</div>
+  </div>
+  <div class="method" style="border-left-color:#1D9E75">
+    <div class="method-title">Q3. LLM의 last token이 vision 정보를 가져가는가?</div>
+    <div class="method-body"><span class="tag t-ans">Yes</span> — <strong>Layer 1부터 즉시</strong> 흡수. Layer 4에서 peak (direction 57%, pos R²=0.85). 끝까지 chance 이상.</div>
+  </div>
+</div>
+
+<!-- ========== Phase 1 ========== -->
+<div id="pg-p1" class="page">
+  <div class="ph-title">Phase 1 — Position Subspace 분석</div>
+  <div class="ph-q">Q: 위치 정보가 특정 low-rank subspace에 집중되어 있는가?</div>
+
+  <div class="sec-label">Exp 1.1 — 실험 방법</div>
+  <div class="method">
+    <div class="method-title">PCA + Ridge Regression</div>
+    <div class="method-body">
+      pre_mean (8000, 8, 1152) → reshape (64000, 1152) → subsample 10000개<br>
+      PCA로 k개 주성분 추출 → 그 k개 PC만으로 위치(x, y) Ridge regression<br>
+      k = {1, 2, 3, 5, 10, 20, 50, 100, 200, 500, 1000} 각각 5-fold CV R²
+    </div>
+  </div>
+  <div class="sec-label">Exp 1.1 — 결과</div>
+  <div class="card">
+    <div class="br"><div class="bl">PCA 50개 (분산 81.7%)</div><div class="bt"><div class="bf" style="width:6%;background:#FAC775;color:#412402">0.060</div></div><div class="bv">R²(x)</div></div>
+    <div class="br"><div class="bl">PCA 200개 (분산 91.6%)</div><div class="bt"><div class="bf" style="width:28.5%;background:#EF9F27;color:#fff">0.285</div></div></div>
+    <div class="br"><div class="bl">PCA 500개 (분산 97.1%)</div><div class="bt"><div class="bf" style="width:52%;background:#BA7517;color:#fff">0.522</div></div></div>
+    <div class="br"><div class="bl">PCA 1000개 (분산 99.7%)</div><div class="bt"><div class="bf" style="width:63.3%;background:#854F0B;color:#fff">0.633</div></div></div>
+    <div class="br"><div class="bl">전체 1152개 (100%)</div><div class="bt"><div class="bf" style="width:72.7%;background:#1D9E75;color:#fff">0.727 ★</div></div></div>
+    <div class="insight">분산 82%를 포함한 상위 PC 50개로는 R²(x)=0.06 — 쓸모없음. <strong>위치 정보가 주성분에 없고, 전체 dim에 고르게 분산</strong>되어 있다는 직접 증거.</div>
+  </div>
+
+  <div class="sec-label">Exp 1.3 — 실험 방법</div>
+  <div class="method">
+    <div class="method-title">Position-nulled Ablation</div>
+    <div class="method-body">
+      position 상관계수 상위 k개 dim을 제거(null)한 나머지로 3가지 probe:<br>
+      • Object 20-way 분류 (mid frame)<br>
+      • Direction 4-way 분류 (delta = last − first)<br>
+      • Position R²(x) Ridge regression<br>
+      k = {0, 50, 100, 200}
+    </div>
+  </div>
+  <div class="sec-label">Exp 1.3 — 결과</div>
+  <div class="card">
+    <div class="tw"><table>
+      <tr><th>제거한 dim 수</th><th>Object acc</th><th>Direction acc</th><th>Position R²(x)</th></tr>
+      <tr><td>0 (기준)</td><td><span class="hi">0.927</span></td><td><span class="hi">0.912</span></td><td>0.73</td></tr>
+      <tr><td>50개 제거</td><td><span class="hi">0.927</span></td><td>0.900</td><td>0.60</td></tr>
+      <tr><td>100개 제거</td><td><span class="hi">0.926</span></td><td>0.897</td><td>0.59</td></tr>
+      <tr><td>200개 제거</td><td><span class="hi">0.924</span></td><td>0.886</td><td>0.56</td></tr>
+    </table></div>
+    <div class="insight">
+      <strong>Object는 200개 제거해도 무변화</strong> — position dim과 semantic dim이 분리되어 있음 재확인.<br>
+      <strong>Position R²가 0.56까지밖에 안 떨어짐</strong> — 나머지 952개 dim에도 위치 정보가 잔존. 진짜 분산 인코딩.
+    </div>
+  </div>
+</div>
+
+<!-- ========== Phase 2 ========== -->
+<div id="pg-p2" class="page">
+  <div class="ph-title">Phase 2 — 시각적 복잡도 Gradient</div>
+  <div class="ph-q">Q: 물체/배경이 복잡해지면 direction encoding이 약해지는가?</div>
+
+  <div class="sec-label">실험 방법</div>
+  <div class="method">
+    <div class="method-title">4개 조건 × 200 videos (testbed)</div>
+    <div class="method-body">
+      shape_color (도형 + 단색) / obj_color (실제물체 + 단색) / shape_place (도형 + 실제배경) / obj_place (실제물체 + 실제배경)<br><br>
+      각 조건에서: Position R², Delta direction acc, per-dim ANOVA F-stat 측정<br>
+      F-stat: dim별로 4방향 그룹을 얼마나 잘 분리하는지 → "direction-strong dim 수" 카운트
+    </div>
+  </div>
+
+  <div class="sec-label">Exp 2.1 — 조건별 성능</div>
+  <div class="card">
+    <div class="tw"><table>
+      <tr><th>조건</th><th>배경</th><th>물체</th><th>R²(x)</th><th>Delta dir</th><th>F_dir top50 평균</th></tr>
+      <tr><td>shape_color</td><td>단색</td><td>도형</td><td><span class="hi">0.986</span></td><td><span class="hi">0.910</span></td><td><span class="hi">38.9</span></td></tr>
+      <tr><td>obj_color</td><td>단색</td><td>실제 물체</td><td>0.889</td><td>0.885</td><td>18.4</td></tr>
+      <tr><td>shape_place</td><td><span class="lo">실제 배경</span></td><td>도형</td><td>0.930</td><td><span class="lo">0.555</span></td><td><span class="lo">12.5</span></td></tr>
+      <tr><td>obj_place</td><td><span class="lo">실제 배경</span></td><td>실제 물체</td><td>0.925</td><td>0.700</td><td>13.1</td></tr>
+    </table></div>
+    <div class="warn"><strong>물체 복잡도보다 배경 복잡도가 훨씬 큰 영향.</strong> 단색→실제 배경 전환 시 direction acc 0.910→0.555(-40%p). 물체 도형→실제물체는 0.910→0.885(-2.5%p)에 불과.</div>
+  </div>
+
+  <div class="sec-label">Exp 2.3 — Direction-strong dim 수 (F > 5)</div>
+  <div class="card">
+    <div class="br"><div class="bl">shape_color (단색/도형)</div><div class="bt"><div class="bf" style="width:100%;background:#1D9E75;color:#fff">665개</div></div></div>
+    <div class="br"><div class="bl">obj_color (단색/실제물체)</div><div class="bt"><div class="bf" style="width:50.7%;background:#5DCAA5;color:#04342C">337개</div></div></div>
+    <div class="br"><div class="bl">shape_place (실제배경/도형)</div><div class="bt"><div class="bf" style="width:14.9%;background:#E24B4A;color:#fff">99개</div></div></div>
+    <div class="br"><div class="bl">obj_place (실제배경/실제물체)</div><div class="bt"><div class="bf" style="width:17.4%;background:#E24B4A;color:#fff">116개</div></div></div>
+    <div class="insight">실제 배경이 추가되는 순간 direction-strong dim이 <strong>85% 감소</strong>. 배경 노이즈가 방향 신호를 다른 dim으로 분산시키거나 덮어버림. → Background suppression이 direction task에 실질적 도움이 될 것.</div>
+  </div>
+</div>
+
+<!-- ========== Phase 3 ========== -->
+<div id="pg-p3" class="page">
+  <div class="ph-title">Phase 3 — LLM 내부 Hidden State Probing</div>
+  <div class="ph-q">Q: LLM의 text token이 vision 정보(위치/방향/물체)를 실제로 흡수하는가?</div>
+
+  <div class="sec-label">실험 방법</div>
+  <div class="method">
+    <div class="method-title">Last token hidden state 추출</div>
+    <div class="method-body">
+      LLaVA-Video-7B-Qwen2 (fp16, ~14GB) 로드<br>
+      R2R_real_color 400 videos (100/방향 balanced) 입력<br>
+      Prompt: <code>"&lt;image&gt;\nDescribe the video."</code><br>
+      <code>prepare_inputs_labels_for_multimodal</code>로 vision token 병합 후 forward<br>
+      Layer {0, 1, 4, 8, 12, 16, 20, 24, 28} 각각의 last token hidden state (D=3584) 추출<br><br>
+      각 layer에서: Direction 4-way / Object 20-way / Position R²(x) — 5-fold CV
+    </div>
+  </div>
+
+  <div class="sec-label">결과 — Layer별 last token 정보량</div>
+  <div class="card">
+    <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:10px">Direction 정확도 (chance = 25%)</div>
+    <div class="lc"><div class="ll">Layer 0 (embed)</div><div class="lt"><div class="lf" style="width:25%;background:#D3D1C7"></div></div><div class="lv gray">0.250</div></div>
+    <div class="lc"><div class="ll">Layer 1</div><div class="lt"><div class="lf" style="width:52.5%;background:#5DCAA5"></div></div><div class="lv green">0.525</div></div>
+    <div class="lc"><div class="ll">Layer 4 ★</div><div class="lt peak"><div class="lf" style="width:57.3%;background:#1D9E75"></div></div><div class="lv green" style="font-weight:500">0.573★</div></div>
+    <div class="lc"><div class="ll">Layer 8</div><div class="lt"><div class="lf" style="width:48%;background:#9FE1CB"></div></div><div class="lv green">0.480</div></div>
+    <div class="lc"><div class="ll">Layer 12</div><div class="lt"><div class="lf" style="width:44.3%;background:#9FE1CB"></div></div><div class="lv green">0.443</div></div>
+    <div class="lc"><div class="ll">Layer 16~24</div><div class="lt"><div class="lf" style="width:47%;background:#9FE1CB"></div></div><div class="lv green">~0.47</div></div>
+    <div class="lc"><div class="ll">Layer 28 (last)</div><div class="lt"><div class="lf" style="width:46.8%;background:#9FE1CB"></div></div><div class="lv green">0.468</div></div>
+    <hr class="divider">
+    <div class="tw"><table>
+      <tr><th>Layer</th><th>Direction</th><th>Object</th><th>Pos R²(x)</th></tr>
+      <tr><td>0 (embed)</td><td><span class="lo">0.250 (chance)</span></td><td>0.085</td><td>-0.005</td></tr>
+      <tr><td>1</td><td>0.525</td><td><span class="hi">0.663</span></td><td>0.620</td></tr>
+      <tr><td><strong>4 ★</strong></td><td><span class="hi">0.573</span></td><td>0.645</td><td><span class="hi">0.846</span></td></tr>
+      <tr><td>8</td><td>0.480</td><td>0.603</td><td>0.839</td></tr>
+      <tr><td>12</td><td>0.443</td><td>0.485</td><td>0.666</td></tr>
+      <tr><td>28 (last)</td><td>0.468</td><td>0.530</td><td>0.498</td></tr>
+    </table></div>
+    <div class="insight">
+      <strong>Layer 0</strong>: attention 없음 → vision 정보 전혀 없음. <strong>Layer 1</strong>: attention 한 번만 통과해도 즉시 흡수(25%→52.5%). <strong>Layer 4가 peak</strong> — position R²=0.85, direction 57%. 이후 raw 정보 감쇠, task-specific 추상 표현으로 변환. <strong>마지막 layer도 46.8%</strong> — 정보가 최종 토큰까지 살아있지만 lm_head가 방향 토큰으로 디코딩하지 못하는 것이 병목.
+    </div>
+  </div>
+</div>
+
+<!-- ========== Phase 4 ========== -->
+<div id="pg-p4" class="page">
+  <div class="ph-title">Phase 4 — 학습된 모델 Dim 구조 비교 (Rigorous)</div>
+  <div class="ph-q">Q: Fine-tuning이 projector의 direction dim 구조를 어떻게 바꾸는가?</div>
+
+  <div class="sec-label">실험 방법</div>
+  <div class="method">
+    <div class="method-title">Per-patch projection → mean-pool (정확한 계산)</div>
+    <div class="method-body">
+      4개 모델의 projector weight 로드: vanilla / baseline-v5 / delta_direct-v5 / channel_gate-v3<br>
+      동일한 pre_mean features(8000, 8, 729, 1152)에 각 projector를 <strong>patch별로 적용 후 mean-pool</strong><br>
+      <code>post = mean(projector(patch_1), ..., projector(patch_729))</code><br>
+      → post_mean (8000, 8, 3584) 계산, 이전 approximation 오류 수정<br><br>
+      측정: Delta direction acc / Position R² / Object acc / Direction F-stat / Dim overlap
+    </div>
+  </div>
+  <div class="method" style="border-left-color:#1D9E75">
+    <div class="method-title">Direction F-stat (per-dim)</div>
+    <div class="method-body">
+      delta = feat[:, -1, :] − feat[:, 0, :] (마지막−첫 프레임)<br>
+      각 dim d에 대해 4방향 그룹 간 one-way ANOVA F-통계량 계산<br>
+      Top-50 dim 선정 → 모델 간 집합 교집합(overlap) 계산
+    </div>
+  </div>
+
+  <div class="sec-label">결과 — Linear Probe 정확도</div>
+  <div class="card">
+    <div class="g4" style="margin-bottom:10px">
+      <div class="mc"><div class="mc-l">Delta dir — Vanilla</div><div class="mc-v gray">0.884</div></div>
+      <div class="mc"><div class="mc-l">Delta dir — Baseline</div><div class="mc-v blue">0.883</div></div>
+      <div class="mc"><div class="mc-l">Delta dir — Delta-direct</div><div class="mc-v green">0.924</div><div class="mc-s">+4%p</div></div>
+      <div class="mc"><div class="mc-l">Delta dir — Channel-gate</div><div class="mc-v pur">0.922</div><div class="mc-s">+4%p</div></div>
+    </div>
+    <div class="g4">
+      <div class="mc"><div class="mc-l">Pos R²(x) — Vanilla</div><div class="mc-v gray">0.691</div></div>
+      <div class="mc"><div class="mc-l">Pos R²(x) — Baseline</div><div class="mc-v blue">0.693</div></div>
+      <div class="mc"><div class="mc-l">Pos R²(x) — Delta-direct</div><div class="mc-v green">0.765</div><div class="mc-s">+0.07</div></div>
+      <div class="mc"><div class="mc-l">Pos R²(x) — Channel-gate</div><div class="mc-v pur">0.767</div><div class="mc-s">+0.08</div></div>
+    </div>
+    <div class="insight">Object acc는 4개 모두 ≈0.884로 동일. <strong>Direction +4%p, Position +0.08</strong>은 projector tuning으로 방향 신호가 강화된 결과.</div>
+  </div>
+
+  <div class="sec-label">결과 — Direction F-stat (신호 강도)</div>
+  <div class="card">
+    <div class="br"><div class="bl2"><span class="tag m-van">Vanilla</span></div><div class="bt"><div class="bf" style="width:59%;background:#888780;color:#fff">595</div></div><div class="bv">기준</div></div>
+    <div class="br"><div class="bl2"><span class="tag m-base">Baseline</span></div><div class="bt"><div class="bf" style="width:58.5%;background:#185FA5;color:#fff">591</div></div><div class="bv gray">≈ 동일</div></div>
+    <div class="br"><div class="bl2"><span class="tag m-del">Delta-direct</span></div><div class="bt"><div class="bf" style="width:83.5%;background:#1D9E75;color:#fff">843 ★</div></div><div class="bv green">+41%</div></div>
+    <div class="br"><div class="bl2"><span class="tag m-gate">Channel-gate</span></div><div class="bt"><div class="bf" style="width:81.5%;background:#534AB7;color:#fff">823 ★</div></div><div class="bv pur">+38%</div></div>
+  </div>
+
+  <div class="sec-label">결과 — Vanilla와 Top-50 Direction Dim 겹침</div>
+  <div class="card">
+    <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:10px">각 모델의 direction top-50 dim 중 vanilla와 얼마나 겹치는가</div>
+    <div style="margin-bottom:4px;font-size:11px;color:var(--color-text-secondary)"><span class="tag m-base">Baseline</span> — 46/50 (92%)</div>
+    <div class="ov" style="margin-bottom:10px">
+      <div class="ov-seg" style="width:92%;background:#B5D4F4;color:#042C53">Vanilla와 동일 46개</div>
+      <div class="ov-seg" style="width:8%;background:#E6F1FB;color:#185FA5">새 4개</div>
+    </div>
+    <div style="margin-bottom:4px;font-size:11px;color:var(--color-text-secondary)"><span class="tag m-del">Delta-direct</span> — 21/50 겹침, 그 중 vanilla top-50을 강화한 것 32/50</div>
+    <div class="ov" style="margin-bottom:10px">
+      <div class="ov-seg" style="width:42%;background:#9FE1CB;color:#04342C">Vanilla dim 유지 21개</div>
+      <div class="ov-seg" style="width:22%;background:#5DCAA5;color:#04342C">Vanilla dim 강화</div>
+      <div class="ov-seg" style="width:36%;background:#E1F5EE;color:#085041">새 dim 29개</div>
+    </div>
+    <div style="margin-bottom:4px;font-size:11px;color:var(--color-text-secondary)"><span class="tag m-gate">Channel-gate</span> — 27/50 겹침, vanilla top-50 강화 33/50</div>
+    <div class="ov">
+      <div class="ov-seg" style="width:54%;background:#CECBF6;color:#26215C">Vanilla dim 유지 27개</div>
+      <div class="ov-seg" style="width:20%;background:#AFA9EC;color:#26215C">Vanilla dim 강화</div>
+      <div class="ov-seg" style="width:26%;background:#EEEDFE;color:#534AB7">새 dim 23개</div>
+    </div>
+
+    <div class="good" style="margin-top:10px">
+      <strong>핵심 해석:</strong><br>
+      Baseline: direction explicit signal 없이 projector tuning만으론 dim 구조 거의 안 바뀜 (46/50 그대로).<br>
+      Delta-direct/Channel-gate: <strong>vanilla가 쓰던 direction dim 32~33개를 강화(F-stat +40%)</strong>하면서 추가로 새 dim도 개척. "갈아엎는 것"이 아니라 "기존을 증폭 + 신규 개척".
+    </div>
+    <div class="rev-box">
+      ⚡ <strong>이전 approximation 실험과 결론 역전:</strong><br>
+      근사: "delta_direct가 vanilla dim 버리고 완전히 새 dim 만든다" (14/50 overlap)<br>
+      정확: "vanilla dim 유지/강화하면서 일부 추가" (21/50 overlap, 강화 32/50)
+    </div>
+  </div>
+</div>
+
+<!-- ========== Phase 5b ========== -->
+<div id="pg-p5" class="page">
+  <div class="ph-title">Phase 5b — 실제 영상 (SSv2, KTH)</div>
+  <div class="ph-q">Q: 합성 데이터에서 발견한 direction encoding이 실제 영상에서도 작동하는가?</div>
+
+  <div class="sec-label">데이터 및 실험 방법</div>
+  <div class="method">
+    <div class="method-title">SSv2 (Something-Something v2)</div>
+    <div class="method-body">
+      left/right pushing 각 250 videos → 총 500개<br>
+      2-way classification (chance = 50%)<br>
+      SigLIP + Vanilla projector로 on-the-fly feature 추출 → 8 frames uniform sample
+    </div>
+  </div>
+  <div class="method">
+    <div class="method-title">KTH Action Dataset</div>
+    <div class="method-body">
+      left/right walking/jogging: left 447, right 452 → 총 899개<br>
+      동일하게 2-way, SigLIP + projector feature 추출
+    </div>
+  </div>
+
+  <div class="sec-label">결과</div>
+  <div class="card">
+    <div class="tw"><table>
+      <tr><th>Dataset</th><th>Stage</th><th>Delta dir</th><th>Single frame</th><th>T-mean</th><th>F>5 dim 수</th></tr>
+      <tr><td rowspan="2"><strong>SSv2</strong><br><span style="font-size:10px;color:var(--color-text-secondary)">push L/R</span></td><td>pre</td><td>0.662</td><td>0.452</td><td>0.440</td><td>49</td></tr>
+      <tr><td>post</td><td><span class="hi">0.666</span></td><td>0.448</td><td>0.466</td><td><span class="hi">441</span></td></tr>
+      <tr><td rowspan="2"><strong>KTH</strong><br><span style="font-size:10px;color:var(--color-text-secondary)">walk L/R</span></td><td>pre</td><td>0.699</td><td><span class="hi">0.733</span></td><td>0.666</td><td>390</td></tr>
+      <tr><td>post</td><td>0.655</td><td>0.687</td><td>0.670</td><td><span class="hi">1400</span></td></tr>
+    </table></div>
+    <div class="insight">
+      <strong>SSv2</strong>: single frame에서는 방향을 알 수 없음(0.452 ≈ chance 50%). push라는 동작이 발생해야 방향이 드러남 → delta가 핵심.<br><br>
+      <strong>KTH</strong>: single frame만으로 73.3%. 사람이 걷는 방향이 신체 자세/위치에서 이미 보임.<br><br>
+      <strong>Post-proj에서 F>5 dim 폭증</strong> (SSv2: 49→441, KTH: 390→1400): projector가 실제 영상에서도 direction 신호를 여러 dim에 강하게 확산시킴.
+    </div>
+    <div class="good">합성 데이터(R2R_real_color)에서 발견한 패턴이 <strong>실제 영상에서도 동일하게 작동</strong>함을 확인. 외부 타당성 확보.</div>
+  </div>
+
+  <div class="sec-label">논문 연결 — 전체 실험의 시사점</div>
+  <div class="card">
+    <div class="method" style="border-left-color:#534AB7"><div class="method-title" style="color:#534AB7">① Vision encoder는 방향 정보를 이미 갖고 있다</div><div class="method-body">Delta direction R² 88~92%, F-stat top-50 집중. 정보는 있다.</div></div>
+    <div class="method" style="border-left-color:#A32D2D"><div class="method-title" style="color:#A32D2D">② LLM lm_head가 이를 방향 토큰으로 못 꺼낸다</div><div class="method-body">Layer 28에서도 direction 47% — 정보는 살아있는데 디코딩 실패. 병목은 lm_head.</div></div>
+    <div class="method" style="border-left-color:#1D9E75"><div class="method-title" style="color:#1D9E75">③ Projector tuning으로 신호를 증폭하면 LLM이 더 잘 읽는다</div><div class="method-body">Delta-direct/Channel-gate: F-stat +40%, direction acc +4%p. Projector가 핵심 레버.</div></div>
+    <div class="method" style="border-left-color:#BA7517"><div class="method-title" style="color:#BA7517">④ 배경 노이즈 제거가 추가 개선 여지</div><div class="method-body">실제 배경 시 direction-strong dim 85% 감소. Background suppression이 실질적 도움 될 것.</div></div>
+  </div>
+</div>
+
+</div>
+
+<script>
+function go(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b => b.classList.remove('active'));
+  document.getElementById('pg-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
