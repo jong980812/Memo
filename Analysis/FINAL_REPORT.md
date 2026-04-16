@@ -355,28 +355,91 @@ Top-k position dim 제외한 remaining (1152-k) dim으로:
 
 ### B.2.1 PCA dimensionality (obj_place pre-proj)
 
-| PCA k | Variance explained | R²(x) | R²(y) |
-|---|---|---|---|
-| 1 | 30.4% | 0.0003 | 0.0000 |
-| 5 | 45.1% | 0.0025 | 0.0194 |
-| 10 | 57.3% | 0.0069 | 0.0195 |
-| 20 | 72.4% | 0.0094 | 0.0288 |
-| 50 | **91.7%** | **0.0255** | 0.0493 |
-| 100 | 95.8% | **0.6998** | **0.7071** |
-| 200 | 97.5% | 0.7560 | 0.7978 |
-| 500 | 99.1% | 0.7830 | 0.8407 |
-| 1000 | 99.9% | 0.8026 | 0.8677 |
+Position / Object / Direction 세 task 모두 **같은 PCA basis** 에서 top-k PC를 keep-only 하여 probe.
 
-### B.2.2 Null ablation (pre-proj)
+| PCA k | Var expl | **Position R²(x)** | **Object acc** | **Direction acc** |
+|---|---|---|---|---|
+| 1 | 30.4% | 0.000 | 0.045 (chance) | 0.357 |
+| 5 | 45.1% | 0.003 | 0.045 | 0.373 |
+| 10 | 57.3% | 0.007 | 0.055 | 0.395 |
+| 20 | 72.4% | 0.009 | 0.097 | 0.423 |
+| **50** | **91.7%** | **0.026** | **0.421** | 0.544 |
+| **100** | **95.8%** | **0.700** ← jump | **0.747** ← **peak** | **0.884** ← peak |
+| 200 | 97.5% | 0.756 | 0.732 | 0.899 |
+| 500 | 99.1% | 0.783 | 0.687 | 0.874 |
+| 1000 | 99.9% | 0.803 | 0.587 ← 하락 | 0.839 |
 
-| 제거한 top-k pos dims | Object acc | Direction (delta) | Position R²(x) |
-|---|---|---|---|
-| 0 (full) | 0.7843 | 0.8743 | 0.8064 |
-| 10 | 0.7870 | 0.8620 | 0.6299 |
-| 50 | 0.7870 | 0.8580 | 0.6186 |
-| 100 | 0.7858 | 0.8517 | 0.5984 |
-| 200 | 0.7842 | 0.8447 | 0.5516 |
-| **500** | **0.7788** | **0.7988** | **0.4116** |
+**세 task의 PCA 분포 비교**:
+- **Position**: monotonic 증가 (k=50 → R² 0.03, k=100 → 0.70 급점프, k=1000 → 0.80 계속 상승). 정보가 **PC 51–200 구간에 집중**, tail 까지도 일부 기여.
+- **Object**: **PC 1–100에서 대부분 획득** (k=50에서 이미 0.42, k=100에서 0.75 peak). **k=200 이후 오히려 감소** — 추가 PC가 noise로 작용. 정보가 **high/mid variance (PC 1–100)에 집중**.
+- **Direction**: object와 비슷. k=100에서 거의 peak (0.88). position과 object 둘 다의 특성 공유 (D.2의 Pos∩Dir overlap 해석과 일치).
+
+**"Object는 high-variance PC" 주장의 직접 증거**:
+- top-50 PC (var 92%) 만으로도 **object acc 0.42** (chance 0.045 × 9 = 0.40 대비 유의미 상승). Position R² 0.03 (chance)과 대비.
+- top-100 PC (var 96%) 에서 **object acc 0.75** (full 성능 0.78의 96%). Position 0.70 (full 0.80의 87%).
+- 즉 object는 **분산 큰 100개 PC만 있어도 거의 모든 정보 확보**. Position은 같은 100개로 상당 부분 얻지만 **여전히 tail에서 더 얻는다**.
+
+**Peak 위치 비교**:
+| Task | Peak k | Peak 값 | Full k=1000 값 | 해석 |
+|---|---|---|---|---|
+| Position | k=1000 | 0.803 | 0.803 | 계속 증가 — tail에도 정보 |
+| Object | **k=100** | **0.747** | 0.587 | PC 1–100에 집중, 뒤는 noise |
+| Direction | **k=200** | 0.899 | 0.839 | 둘의 중간 |
+
+### B.2.2 Null ablation (pre-proj) — *correlation 기반 dim 제거*
+
+| 제거한 top-k pos dims | **Var share** | Object acc | Direction (delta) | Position R²(x) |
+|---|---|---|---|---|
+| 0 (full) | 0.000 | 0.7843 | 0.8743 | 0.8064 |
+| 10 | **0.009** | 0.7870 | 0.8620 | 0.6299 ← 1% variance 제거에 R² −18%p |
+| 50 | **0.048** | 0.7870 | 0.8580 | 0.6186 |
+| 100 | **0.104** | 0.7858 | 0.8517 | 0.5984 |
+| 200 | **0.188** | 0.7842 | 0.8447 | 0.5516 |
+| **500** | **0.449** | **0.7788** | **0.7988** | **0.4116** |
+
+**var_share 추가 해석**: top-10 pos-correlated dim들이 **전체 variance의 단 1%** 만 차지하지만 제거 시 R²(x)가 0.81→0.63으로 폭락. **position 정보가 작은 variance dim에 집중되어 있다** 는 B.2.3 (PCA) 결론을 raw-dim 기준으로 직접 재확인.
+
+### B.2.2-rev Object-discriminative top-k 제거 (pre-proj) — *역방향 null ablation*
+
+Per-dim **F-statistic (anova)** for object-class discriminability → top-k 제거.
+
+| 제거한 top-k OBJ dims | **Var share** | Object acc | Direction (delta) | Position R²(x) |
+|---|---|---|---|---|
+| 0 (full) | 0.000 | 0.7848 | 0.8747 | 0.8064 |
+| 10 | 0.009 | 0.7873 | 0.8737 | 0.8061 |
+| 50 | 0.038 | 0.7868 | 0.8703 | 0.8037 |
+| 100 | 0.078 | 0.7852 | 0.8657 | 0.8002 |
+| 200 | 0.155 | 0.7810 | 0.8563 | 0.7953 |
+| **500** | **0.416** | **0.7717** | 0.8310 | **0.7773** ← 거의 그대로 |
+
+**Symmetric variance share, asymmetric effect**: top-500 pos dim과 top-500 obj dim 모두 전체 variance의 ~42%를 차지하지만, **pos 제거 → R²(x) −0.39 / obj 제거 → R²(x) −0.03**. 같은 variance를 지워도 정보 파괴력이 다른 이유는 두 ranking이 **서로 다른 dim 집합**을 고르기 때문 — subspace separation의 정량적 증거.
+
+**핵심**:
+- Top-500 obj-F dim 제거해도 **object acc 0.785 → 0.772 (-1.3%p)**, **position R²(x) 0.806 → 0.777 (-3%p)** — 둘 다 거의 보존.
+- 비교 (B.2.2): top-500 **pos-correlated** dim 제거 → position R²(x) **0.806 → 0.412** (-49%) 폭락, object는 0.78 유지.
+- 즉 **object subspace ⊥ position subspace** 가 양방향으로 확인됨:
+  - position 강한 dim 제거 → object 안 죽음
+  - object 강한 dim 제거 → position 안 죽음
+- 추가로, object 정보는 position보다 **더 분산** 되어 있음 (top-500 제거해도 acc 거의 유지) — 단일 dim ranking으로 object 정보를 집중시키기 어려움.
+
+### B.2.3 PCA-component removal ablation (pre-proj) — *high-variance PC 제거*
+
+PCA basis에서 top-k PC를 zero-out 후 동일 probe.
+
+| 제거한 top-k PC | 누적 var 손실 | Object acc | Direction (delta) | Position R²(x) |
+|---|---|---|---|---|
+| 0 (full PCA) | 0.000 | 0.5890 | 0.8393 | 0.8026 |
+| 10 | 0.573 | 0.5833 | 0.8353 | 0.7922 |
+| **50** | **0.917** | 0.5170 | 0.8307 | **0.7671** ← 거의 유지 |
+| **100** | **0.958** | **0.2020** | 0.6087 | **−0.0039** ← 폭락 |
+| 200 | 0.975 | 0.0973 | 0.5423 | −0.0526 |
+| 500 | 0.991 | 0.0602 | 0.4490 | −0.0441 |
+
+**핵심**:
+- Top-50 PC (variance 92%) 제거해도 R²(x) **0.80 → 0.77** 거의 그대로 → **position 정보는 high-variance에 거의 없음**.
+- Top-100 PC 제거 시 R²(x) **−0.0** 폭락 → **PC 51–100 (variance 4%만 추가) 구간에 position 거의 전부 집중**.
+- Object는 반대 패턴: top-50 PC 제거에서 0.589→0.517 (소폭), top-100에서 0.202로 급락 → **object는 high-variance + 일부 mid-variance**.
+- B.2.2 (correlation 기반) 와 B.2.3 (PCA basis 기반) 결과 일치 → "position lives in low-variance tail" 가설 **직접 확인**.
 
 ## B.3 해석
 
@@ -441,25 +504,129 @@ Top-k position dim 제외한 remaining (1152-k) dim으로:
 
 ### B.4.3 해석
 
-**시각적 복잡도와 position subspace 구조는 강하게 결합**:
+#### 통합 직관 (B.2.1 ↔ B.4)
 
-1. **shape_color (가장 단순)**: Position이 **main variance**의 일부 → PCA top-50 (var 93%)만으로 R²=0.86. 또한 **모든 dim이 같은 position을 redundantly 인코딩** → top-500 제거해도 0.96 잔존.
+PCA는 vision token이 **가장 크게 흔들리는 방향** 순서로 축을 정렬한다. 그 "흔들림"의 정체가 무엇인지가 scene complexity에 따라 달라진다:
 
-2. **obj_place (가장 복잡)**: Position이 **low-variance tail**에 숨어있음 → PCA top-50에서 R²=0.03, k=100 이후에야 급점프. 그리고 dim별로 **기여 차이 큼** → top-500 제거하면 R² 급락 (−0.39).
+- **단순 scene (shape_color)**: 카메라가 본 거의 모든 변동의 원인 = 도형이 어디 있냐 (위치). 다른 변동 요소 (배경, texture) 가 거의 없음. → PC1부터 위치와 직접 연결. **"멜로디 = 위치"**.
+- **복잡 scene (obj_place)**: 진짜 큰 변동 = object identity, 실배경 texture, lighting. 위치는 그 위에 얹힌 미세한 떨림. → PC1~50 (variance 92%) 다 써도 위치 회귀 R²=0.03. **"멜로디 = semantic, hum = 위치"**.
 
-3. **obj_color vs shape_place** 교차 비교로 재확인: 
-   - shape_place (실배경+도형): k=100에서 0.73으로 빠르게 회복 (도형이 단순해서 배경만이 variance source)
-   - obj_color (단색+실물체): k=100에서 0.27밖에 안 됨 — 실물체의 visual variance가 매우 커서 position을 더 깊게 묻어버림
+즉 같은 SigLip이라도 **입력 분포가 simple하면 position이 main variance, complex하면 low-variance tail**. PCA = "분산 최대화" 알고리즘이 무엇을 잡느냐는 입력이 결정한다.
 
-4. **"가장 dominant한 PC1이 position과 얼마나 unrelated한가"**:
-   - shape_color: PC1 variance 22%, R²(x) 0.005 (약간 연관)
-   - **obj_place: PC1 variance 30%, R²(x) ~0 (완전 무관)** — 한 방향에 가장 큰 variance가 쏠려있지만 위치와 전혀 관계 없음 (real-world texture/clutter로 추정)
+#### Condition별 정량 분석
+
+1. **shape_color (가장 단순)**: Position이 **main variance**의 일부 → PCA top-50 (var 93%)만으로 R²=0.86. 또한 **모든 dim이 같은 position을 redundantly 인코딩** → top-500 제거해도 0.96 잔존. JPEG 비유로는 "low-frequency만 보존해도 위치 다 살아남음".
+
+2. **obj_place (가장 복잡)**: Position이 **low-variance tail (PC 51–100, 추가 variance 단 4%)** 에 숨어있음 → PCA top-50에서 R²=0.03, k=100에서 0.70로 점프. dim별 기여도 차이 큼 → top-500 제거하면 R² 급락 (−0.39). "JPEG처럼 high-frequency 잘라내면 위치부터 사라진다".
+
+3. **obj_color vs shape_place** 교차 비교 — 어느 쪽이 variance를 잡아먹나:
+   - shape_place (실배경+도형): k=100에서 R²=0.73 빠르게 회복. **배경의 spatial variance가 위치 신호와 정렬됨** (도형 위치 ≈ 배경 frame 좌표).
+   - obj_color (단색+실물체): k=100에서 R²=0.27밖에 안 됨. **실물체 자체가 internal texture/shading 변동이 거대해서** 위치를 PC100 이후로 더 깊게 밀어넣음.
+
+4. **PC1의 정체** (한 방향 dominant variance가 무엇인가):
+   - shape_color: PC1 variance 22%, R²(x) 0.005 — PC1이 위치와 약하게나마 연결.
+   - **obj_place: PC1 variance 30%, R²(x) ≈ 0** — 한 방향에 분산이 가장 쏠려있지만 위치와 **완전 무관**. 그 방향 = real-world texture/clutter로 추정. **"가장 시끄러운 신호가 정작 task와는 무관"** 한 전형적 high-noise 환경.
+
+#### Mean-pool projector가 왜 obj_place에서 망가지는가 (B.2.1과의 연결)
+
+Projector가 vision token을 mean-pool하면 출력은 **high-variance 방향에 자동으로 가중**된다 (큰 진폭이 평균에 더 강하게 반영되니까). obj_place에서는:
+- High-variance 방향 = semantic noise (object texture, background)
+- Low-variance 방향 = position signal
+
+→ Projector 출력에서 **position이 자연 dilute**됨. shape_color에서는 둘이 정렬되어 있어 문제 없지만, obj_place에서는 dilution이 심각.
+
+이게 후속 실험들 (delta_direct, channel_gate) 의 동기다 — 자연스럽게 묻히는 position을 강제로 살려야 함.
 
 ### B.4.4 Method design 시사점
 
 1. **Simple scene에서만 "PCA/분산 큰 축 = position"**. Real-world (obj_place)에서는 정반대. 따라서 **PCA 기반 dim selection으로 position을 찾는 휴리스틱은 복잡 scene에서 실패**.
 2. **복잡 scene일수록 position signal이 약하고 dim별 차이 큼** → 전역 개입이 더 필요하고, explicit direction supervision (delta_direct 계열)이 이득을 보는 이유.
 3. Analysis section F에서 본 **obj_place에서 ours의 F-stat 상승이 shape_simple 기준 training보다 작은 것**도 이 현상의 연장 — 복잡 scene에서는 projector만으론 부족, LLM 내부 supervision (plan의 `llm_delta_multilayer`)이 필요한 이유.
+
+### B.4.5 OOD 함의 — vanilla 표현 구조 자체가 이미 OOD-prone
+
+> **주의**: B 섹션은 전부 vanilla SigLip + mean-pool 기준. trained 모델 학습 prior 얘기 없음. 아래는 **vanilla 표현 구조만으로** 도출되는 OOD 진단.
+
+#### 4 condition vanilla 요약
+
+| Scene | PC1 var | PC1 ↔ position | top-50 PC R²(x) | 위치 정보가 사는 곳 |
+|---|---|---|---|---|
+| shape_color | 22% | weak (0.005) | **0.86** | main variance |
+| shape_place | 21% | ~0 | 0.006 | tail |
+| obj_color | 9% | ~0 | 0.077 | tail |
+| **obj_place** | **30%** | **~0** | **0.026** | **tail (PC 51–100)** |
+
+#### 결론 1 — Subspace 위치가 condition마다 달라 표현 자체가 distribution-shift
+
+- 위치 정보를 읽는 데 필요한 dim 집합이 condition마다 다름 (simple = high-variance, complex = low-variance tail).
+- 즉 어떤 downstream head를 붙이든, **단순 scene 분포에서 본 "위치를 담은 dim"이 복잡 scene에서는 다른 곳에 있다**.
+- 학습 이전, **SigLip 단계에서 이미 OOD 문제 발생**.
+
+#### 결론 2 — Mean-pool이 OOD를 증폭
+
+- B.4의 모든 분석은 mean-pool **이후** vector. Mean-pool은 patch 평균이라 high-variance 방향에 자동 가중.
+- shape_color: high-variance ≈ 위치 → mean-pool이 위치 보존.
+- obj_place: high-variance = texture/clutter → **mean-pool이 위치 dilute**.
+- 같은 SigLip이라도 입력 scene이 복잡해지는 순간 mean-pool 출력에서 위치가 사라진다.
+
+#### 한 줄 요약
+
+> **B.4 → OOD 진단 (vanilla 기준)**: 위치 정보가 사는 subspace가 scene complexity에 따라 다르다 (단순 = main variance, 복잡 = low-variance tail). Mean-pool은 high-variance에 가중하므로, 복잡 scene에서는 위치를 **표현 단계에서 이미** 소실시킨다. 이는 어떤 trained head를 붙이기 전, vanilla 표현 자체의 한계.
+
+#### B.4가 못 하는 것
+
+- "trained model이 OOD에서 어떻게 실패하는가"는 답 못함 (B는 vanilla 단독). → F/H 섹션의 4-model 비교 + 별도 OOD eval 필요.
+- 본 진단은 표현 수준 (representation-level) 진단이며, generation-level OOD 격차는 별도로 측정해야 한다.
+
+### B.4.6 Trained projectors에서 같은 분석 — fine-tuning이 subspace를 옮기는가?
+
+> 동일 4-condition × 4-model post-proj subspace 분석 (`multiproj_{cond}.npz`, D=3584). PCA top-50 R²(x) = "위치 정보가 high-variance 50개 PC에서 얼마나 읽히는가" 지표.
+
+| Cond | Model | PC1 var | PC1 R² | **k50 R²(x)** | k50 var | null500 |
+|---|---|---|---|---|---|---|
+| shape_color | vanilla | 0.266 | 0.004 | 0.672 | 0.953 | 0.970 |
+| shape_color | baseline | 0.261 | 0.004 | 0.689 | 0.952 | 0.971 |
+| shape_color | **delta_direct** | 0.256 | ~0 | **0.905** | 0.955 | 0.983 |
+| shape_color | **channel_gate** | 0.251 | 0.002 | **0.920** | 0.955 | 0.983 |
+| shape_place | vanilla | 0.134 | ~0 | 0.009 | 0.984 | 0.864 |
+| shape_place | baseline | 0.134 | ~0 | 0.009 | 0.984 | 0.865 |
+| shape_place | delta_direct | 0.130 | ~0 | 0.010 | 0.983 | 0.888 |
+| shape_place | channel_gate | 0.127 | ~0 | 0.010 | 0.983 | 0.887 |
+| obj_color | vanilla | 0.119 | ~0 | 0.088 | 0.839 | 0.848 |
+| obj_color | baseline | 0.119 | ~0 | 0.088 | 0.839 | 0.848 |
+| obj_color | **delta_direct** | 0.122 | ~0 | **0.287** | 0.842 | 0.899 |
+| obj_color | **channel_gate** | 0.119 | 0.001 | **0.310** | 0.841 | 0.903 |
+| **obj_place** | vanilla | 0.133 | 0.003 | 0.034 | 0.936 | 0.816 |
+| **obj_place** | baseline | 0.133 | 0.003 | 0.034 | 0.936 | 0.817 |
+| **obj_place** | delta_direct | 0.124 | 0.002 | **0.033** | 0.935 | 0.835 |
+| **obj_place** | channel_gate | 0.121 | 0.003 | **0.035** | 0.934 | 0.835 |
+
+#### 핵심 관찰
+
+1. **단색 배경 (shape_color, obj_color) 에서는 ours (delta_direct, channel_gate) 가 position을 main variance로 끌어올림**:
+   - shape_color: k50 R² **0.67 (vanilla) → 0.92 (channel_gate)** — top-50 PC만으로 거의 완벽 복원.
+   - obj_color: k50 R² **0.09 → 0.31** — 3.5배 증가.
+   - baseline은 vanilla와 거의 동일 → **delta_direct/channel_gate의 explicit direction supervision이 한 일**.
+
+2. **실배경 (shape_place, obj_place) 에서는 ours도 못 옮김**:
+   - shape_place: k50 R² 0.009 (vanilla) → 0.010 (channel_gate). 사실상 **변화 없음**.
+   - obj_place: k50 R² 0.034 → 0.035. **변화 없음**.
+   - 즉 실배경의 visual variance가 너무 강력해서 projector level에서 position을 high-variance로 끌어올리지 못함.
+
+3. **PC1 자체는 어느 조합에서도 위치와 무관** (PC1 R² ≤ 0.004 모든 셀):
+   - 가장 큰 variance 방향은 **모든 모델, 모든 condition에서 semantic noise로 점유**됨.
+   - Fine-tuning이 PC1을 "위치 축"으로 만들지는 못함.
+
+#### 해석 — B.4.5 OOD 진단의 부분적 보강
+
+- **OOD 완화 부분 성공**: 단색 배경 OOD (shape_color, obj_color) 에서는 ours가 vanilla 대비 position subspace를 main variance로 가져옴 → mean-pool dilution 완화.
+- **OOD 완화 실패**: 실배경 (shape_place, obj_place) 에서는 ours도 벽에 부딪힘. **projector level 개입의 한계**.
+- **함의**: real-world OOD (실배경)에서 generation 격차를 만들려면 projector 개입만으로는 부족 → LLM 내부 supervision (last_token_dir 등) 이 필요한 이유의 직접적 표현 수준 근거.
+
+#### 한계
+
+- post-proj null ablation의 R²이 **모든 모델/condition에서 거의 변하지 않음** (top-500 제거 후에도 0.82–0.98). → post-proj D=3584의 redundancy가 너무 높아 dim-removal 변별력이 약함. PCA top-50 R² 지표가 더 informative.
+- shape_simple_new (training data) 와 정확히 같은 분포에서의 측정이 아님 — R2R_video_1500 4 condition은 모두 OOD에 가까움. shape_simple_new 자체에서 측정하면 ours가 main variance로 정렬되는 정도가 더 클 수 있음.
 
 ---
 
@@ -539,20 +706,52 @@ Top-k position dim 제외한 remaining (1152-k) dim으로:
 | **Position ∩ Object** | **1/50** | **0/50** |
 | **Direction ∩ Object** | **0/50** | **1/50** |
 
+### Top-100 overlap (obj_place) — 추가 검증
+
+| Pair | Pre-proj (D=1152, random ≈ 8.7) | Post-proj (D=3584, random ≈ 2.8) |
+|---|---|---|
+| **Position ∩ Direction** | 30/100 | **43/100** |
+| **Position ∩ Object** | 9/100 (≈ random) | 3/100 |
+| **Direction ∩ Object** | 5/100 (< random) | 2/100 |
+
+**K=50 패턴 K=100에서도 유지** — Pos∩Obj, Dir∩Obj는 random 수준 (분리), Pos∩Dir는 random 대비 3.5–15× (공유). Post-proj에서 Pos∩Dir overlap이 43/100로 더 강해짐 → projector가 두 정보를 더 같은 dim에 묶음.
+
 ## D.3 해석
 
 ### 1) Position ≈ Direction (어느 정도 공유)
-- 17/50 overlap (random 2.2 대비 8배) — 위치를 담는 dim의 일부가 direction F-stat도 높음
-- **직관**: direction은 position의 시간 변화이므로, position-encoding dim의 delta가 direction 신호가 됨
+- K=50에서 17/50 (random 8×), K=100에서 30/100 (pre) ~ 43/100 (post). overlap ratio 일관.
+- **직관**: direction은 position의 시간 변화이므로, position-encoding dim의 delta가 direction 신호가 됨.
 
 ### 2) Position vs Object 완전 분리
-- **1/50 (pre), 0/50 (post)** — random 수준 혹은 그 이하
-- 위치 담당 dim과 semantic 담당 dim이 **완전히 다른 부분공간**에 존재
-- **Projector 통과 후 더 깨끗하게 분리** (1→0)
+- K=50: 1/50 (pre), 0/50 (post) — chance 이하.
+- K=100: 9/100 (pre, ≈ random 8.7), 3/100 (post, ≈ random 2.8) — 여전히 chance 수준.
+- 위치 담당 dim과 semantic 담당 dim이 **완전히 다른 부분공간**에 존재.
+- **Projector 통과 후 더 깨끗하게 분리** (post가 random 대비 더 작음).
+
+### D.4 B 섹션과의 연결 — 같은 현상의 세 가지 측면
+
+D.2 (dim overlap) 결과는 B의 여러 ablation과 **같은 현상 (position ⊥ object subspace) 의 다른 측면**:
+
+| Section | 측정 방식 | 같은 결론을 어떻게 보여주나 |
+|---|---|---|
+| **B.2.2** (correlation null) | top-500 pos-correlated dim 제거 | object acc 유지 (0.78 → 0.78) |
+| **B.2.2-rev** (object null) | top-500 obj-F dim 제거 | position R²(x) 유지 (0.81 → 0.78) |
+| **B.2.3** (PCA null) | top-50 PC 제거 | position R² 유지 (0.80 → 0.77), object 일부 손상 |
+| **D.2** (dim ranking overlap) | top-K F-stat 집합 비교 | Pos∩Obj overlap = chance (1/50, 9/100) |
+
+**핵심**: B는 **"제거 후 task가 살아남는가"**, D는 **"각 task의 top dim이 같은 dim들을 고르는가"** — 둘 다 "두 정보가 다른 dim 집합에 인코딩됨" 의 정량화. D.2가 가장 직접적 (집합 비교), B.2.2/2-rev가 functional 검증, B.2.3가 PCA basis 검증.
+
+**D가 B에 추가로 보여주는 것 (B에는 없는 것)**:
+- Position ↔ **Direction** dim sharing (B는 direction subspace를 따로 안 봄). C.2/C.3 temporal probes와 합치면 "direction은 position의 시간 derivative" 라는 가설의 dim-level 증거.
+- Post-proj에서 Pos∩Dir overlap 증가 (17/50 → 43/100) → projector가 두 정보를 더 같은 dim에 모으는 효과 (B.4.6의 "ours가 단색 배경에서 position을 main variance로 끌어올림" 과 같은 방향의 현상).
+
+**B가 D에 추가로 보여주는 것 (D에는 없는 것)**:
+- Position 정보의 **variance share** (top-10 pos dim = 1% var이지만 R² −18%p) → "작은 variance에 집중" 정량화.
+- PCA basis로 변환했을 때의 동일 현상 (B.2.3) → "low-variance tail" 위치 특정.
 
 ### 3) Q4에 대한 답
 
-**Spatial(position/direction)과 Semantic(object)은 dim-level로 분리된 subspace를 사용**. 이는:
+**Spatial(position/direction)과 Semantic(object)은 dim-level로 분리된 subspace를 사용**. B (functional null ablation) 와 D (dim set overlap) 양 측면에서 일관되게 확인. 이는:
 
 - Method design 관점에서 중요: spatial dim만 amplify해도 semantic을 손상시키지 않음 (우리 ours가 바로 이 특성을 활용)
 - 근데 "top-50 dim이 정말 independent한가?"는 더 엄밀한 질문. Cross-probe 실험 (각 top-50 dim으로 다른 task 예측)에서는 cross-accuracy가 의외로 높게 나오는데, 이는 **주된 신호는 분리되지만 약한 secondary signal은 곳곳에 존재**함을 의미.
@@ -1041,6 +1240,68 @@ Ours (delta_direct/channel_gate):
                        │                │       0.86-0.89 ✓✓
                        └─ F_top ↑       └─ Letter L20→L28: 0.53→0.68 ✓✓
 ```
+
+---
+
+# J. LoRA vs mm_projector ablation — 어디서 letter mapping이 학습되나?
+
+## J.1 실험 설정
+
+Baseline = LoRA adapter (LLM) + mm_projector 동시 학습. 두 요소의 기여를 분리:
+
+| 조건 | mm_projector | LLM LoRA |
+|---|---|---|
+| vanilla | 사전학습 | 없음 |
+| **lora_only** | 사전학습 그대로 | baseline LoRA merged |
+| **proj_only** | baseline projector 적재 | 없음 |
+| baseline | baseline projector | baseline LoRA |
+
+`extract_ablation.py` — 각 조합으로 LLM hidden 추출 후 probe (N=1500 videos, obj_place).
+
+## J.2 결과 (obj_place, letter/direction probe)
+
+| Model | Letter L20 | Letter L28 | Direction L20 | Direction L28 |
+|---|---|---|---|---|
+| vanilla | 0.295 | **0.303** | 0.663 | 0.580 |
+| **lora_only** | 0.449 | **0.610** | 0.846 | 0.827 |
+| **proj_only** | 0.308 | **0.316** | 0.724 | 0.652 |
+| baseline (full) | 0.500 | **0.654** | 0.873 | 0.859 |
+
+**Gap 분해** (vanilla 대비 L28 letter):
+- **lora_only**: +0.307 (+30.7%p) — baseline 상승분의 **88%**
+- **proj_only**: +0.013 (+1.3%p) — **거의 기여 없음**
+- baseline: +0.351 (상한)
+
+## J.3 해석
+
+### 1) Letter mapping은 거의 전적으로 LoRA가 담당
+
+- LoRA 없이 projector만 학습: vanilla와 사실상 동일 (0.303 → 0.316).
+- Projector는 vanilla든 baseline이든 **letter 출력을 바꾸지 못함**. Letter는 LLM 내부에서 생성되는 토큰이므로 LLM weight (LoRA) 가 필요.
+
+### 2) Direction probe도 같은 패턴이지만 약간의 projector 효과 있음
+
+- Direction L28: vanilla 0.580 → proj_only 0.652 (+7%p) → lora_only 0.827 (+25%p)
+- Projector만 바꿔도 representation-level에서 direction 정보는 일부 강화 (Section F/G와 일치). 하지만 **letter로 변환하는 마지막 단계는 LoRA가 필요**.
+
+### 3) Vanilla LLM은 direction을 알지만 letter로 못 씀
+
+- vanilla L28 direction probe **0.580** (≠ chance 0.25) → 위치 방향 정보 LLM 내부에 존재
+- vanilla L28 letter probe **0.303** (≈ chance 0.25) → **letter로 변환 실패**
+- → **정보 존재 vs 사용 가능의 격차**. LoRA가 이 격차를 메움.
+
+### 4) Section H 결론의 직접 증명
+
+Section H는 "fine-tuning이 letter mapping을 학습한다" 고 주장. J는 이를 **어느 컴포넌트**가 하는지 까지 내려감:
+- LLM LoRA = letter mapping 담당 (88%)
+- Projector = representation refinement만 (12%)
+
+## J.4 Method design 함의
+
+1. **Projector 개입 (delta_direct, channel_gate)** 은 representation을 다듬지만, **LoRA 없이는 generation 격차 해소 불가**. 우리 방법도 LoRA 위에서 쓰는 것이 정답.
+2. **Vanilla LLM의 letter mapping 격차**는 **LoRA로만 풀 수 있는 문제**. Projector-only 접근 (training-free head tuning 등) 으로는 한계 명확.
+3. **Pretrained LLM 내부의 direction 표현은 이미 존재** (L28 probe 0.58, chance 2배 이상). 문제는 "그 정보를 letter token 확률로 변환하는 head" 가 vanilla에서는 **direction-blind**한 상태.
+4. 관점 전환: "LoRA가 뭘 배우나?" → **"direction → letter 매핑"** (세부적인 새 representation 생성이 아니라 기존 정보를 output format에 정렬).
 
 ---
 
